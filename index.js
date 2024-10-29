@@ -1,39 +1,19 @@
 const dns = require('dns');
-const http = require('http');
-const httpProxy = require('http-proxy');
+const open = require('open');
 
-// Replace with your actual DNS
-const dnsName = 'ec2-13-233-159-153.ap-south-1.compute.amazonaws.com';
-const PORT = 3000; // Port for your local server
+const EC2_DNS = 'ec2-13-233-159-153.ap-south-1.compute.amazonaws.com';
 
-// Create a proxy server
-const proxy = httpProxy.createProxyServer({});
-
-// Function to resolve DNS and start the HTTP server
-function startProxy() {
-    dns.lookup(dnsName, (err, ipAddress) => {
+const getEc2Ip = () => {
+    dns.lookup(EC2_DNS, (err, address, family) => {
         if (err) {
-            console.error(`Error resolving DNS: ${err.message}`);
+            console.error(`DNS lookup error: ${err.message}`);
             return;
         }
-        
-        console.log(`Resolved ${dnsName} to ${ipAddress}`);
 
-        // Create a local server that forwards requests to the EC2 instance IP
-        const server = http.createServer((req, res) => {
-            proxy.web(req, res, { target: `http://${ipAddress}` }, (e) => {
-                console.error(`Proxy error: ${e.message}`);
-                res.writeHead(502);
-                res.end('Bad Gateway');
-            });
-        });
-
-        server.listen(PORT, () => {
-            console.log(`Proxy server is running at http://localhost:${PORT}`);
-        });
+        console.log(`Resolved IP: ${address}`);
+        // Open the URL in the default browser
+        open(`http://${address}`).catch(err => console.error('Error opening browser:', err));
     });
-}
+};
 
-// Start the proxy
-startProxy();
-
+getEc2Ip();
